@@ -1,6 +1,7 @@
 package com.linkup.media;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.linkup.common.BadRequestException;
 import com.linkup.common.ForbiddenException;
 import com.linkup.common.ResourceNotFoundException;
@@ -52,7 +53,7 @@ public class MediaService {
                     "resource_type", "image",
                     "quality", "auto",
                     "fetch_format", "auto",
-                    "eager", List.of(Map.of("width", 480, "height", 480, "crop", "fill", "quality", "auto"))));
+                    "eager", List.of(new Transformation<>().width(480).height(480).crop("fill").quality("auto"))));
             String secureUrl = requireSecureUrl(result, "image");
             Media media = new Media();
             media.setUser(user);
