@@ -11,12 +11,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class MediaService {
+    private static final Logger log = LoggerFactory.getLogger(MediaService.class);
     private static final long MAX_IMAGE_BYTES = 5L * 1024 * 1024;
     private static final long MAX_VIDEO_BYTES = 50L * 1024 * 1024;
     private final MediaRepository mediaRepository;
@@ -67,7 +70,8 @@ public class MediaService {
         } catch (BadRequestException ex) {
             throw ex;
         } catch (RuntimeException ex) {
-            throw new BadRequestException("Cloudinary image upload failed");
+            log.warn("Cloudinary image upload failed: {}", ex.getMessage(), ex);
+            throw new BadRequestException("Cloudinary image upload failed: " + safeCloudinaryMessage(ex));
         }
     }
 
@@ -98,7 +102,8 @@ public class MediaService {
         } catch (BadRequestException ex) {
             throw ex;
         } catch (RuntimeException ex) {
-            throw new BadRequestException("Cloudinary video upload failed");
+            log.warn("Cloudinary video upload failed: {}", ex.getMessage(), ex);
+            throw new BadRequestException("Cloudinary video upload failed: " + safeCloudinaryMessage(ex));
         }
     }
 
@@ -182,6 +187,14 @@ public class MediaService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private String safeCloudinaryMessage(RuntimeException ex) {
+        String message = ex.getMessage();
+        if (message == null || message.isBlank()) {
+            return "check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET";
+        }
+        return message.replaceAll("(?i)(api_secret=)[^,&\\s]+", "$1***");
     }
 
     private void deleteFromCloudinary(Media media) {
