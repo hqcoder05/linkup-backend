@@ -139,20 +139,12 @@ public class PostService {
     public void savePost(Long postId, Long userId) {
         Post post = get(postId);
         ensureVisible(post, userId);
-        SavedPostId id = new SavedPostId(userId, postId);
-        if (savedPostRepository.existsById(id)) {
-            return;
-        }
-        SavedPost savedPost = new SavedPost();
-        savedPost.setId(id);
-        savedPost.setUser(userService.get(userId));
-        savedPost.setPost(post);
-        savedPostRepository.save(savedPost);
+        savedPostRepository.savePost(userId, postId);
     }
 
     @Transactional
     public void unsavePost(Long postId, Long userId) {
-        savedPostRepository.deleteById(new SavedPostId(userId, postId));
+        savedPostRepository.unsavePost(userId, postId);
     }
 
     public List<PostDto> savedPosts(Long userId, int page, int size) {
