@@ -2,6 +2,7 @@ package com.linkup.auth;
 
 import com.linkup.auth.dto.AuthResponse;
 import com.linkup.auth.dto.LoginRequest;
+import com.linkup.auth.dto.RefreshTokenRequest;
 import com.linkup.auth.dto.RegisterRequest;
 import com.linkup.common.BadRequestException;
 import com.linkup.profile.Profile;
@@ -66,6 +67,9 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+        if (!user.isActive()) {
+            throw new BadRequestException("Account is deactivated");
+        }
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadRequestException("Invalid email or password");
         }
@@ -74,6 +78,20 @@ public class AuthService {
 
     public AuthResponse me(User user) {
         return new AuthResponse(null, null, UserMapper.toDto(user));
+    }
+
+    @Transactional
+    public AuthResponse refresh(RefreshTokenRequest request) {
+        RefreshToken current = refreshTokenRepository.findByToken(request.refreshToken())
+                .orElseThrow(() -> new BadRequestException("Invalid refresh token"));
+        if (current.isRevoked() || current.getExpiresAt().isBefore(Instant.now())) {
+            throw new BadRequestException("Invalid refresh token");
+        }
+        if (!current.getUser().isActive()) {
+            throw new BadRequestException("Account is deactivated");
+        }
+        current.setRevoked(true);
+        return tokensFor(current.getUser());
     }
 
     private AuthResponse tokensFor(User user) {

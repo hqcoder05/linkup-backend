@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.Instant;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -31,6 +32,40 @@ public class User {
 
     @Column(length = 500)
     private String avatarUrl;
+
+    @Column(length = 500)
+    private String coverUrl;
+
+    @Column(nullable = false)
+    private boolean privateAccount;
+
+    @Column(length = 40)
+    private String phoneNumber;
+
+    private LocalDate dateOfBirth;
+
+    @Column(nullable = false)
+    private boolean emailNotificationsEnabled = true;
+
+    @Column(nullable = false)
+    private boolean pushNotificationsEnabled = true;
+
+    @Column(nullable = false)
+    private boolean autoplayVideoEnabled = true;
+
+    @Column(nullable = false)
+    private boolean contentVisibleToPublic = true;
+
+    @Column(nullable = false)
+    private boolean searchIndexingEnabled = true;
+
+    @Column(nullable = false)
+    private boolean twoFactorEnabled;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    private Instant deactivatedAt;
 
     @Column(nullable = false)
     private String passwordHash;
@@ -57,6 +92,30 @@ public class User {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getCoverUrl() { return coverUrl; }
+    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
+    public boolean isPrivateAccount() { return privateAccount; }
+    public void setPrivateAccount(boolean privateAccount) { this.privateAccount = privateAccount; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public boolean isEmailNotificationsEnabled() { return emailNotificationsEnabled; }
+    public void setEmailNotificationsEnabled(boolean emailNotificationsEnabled) { this.emailNotificationsEnabled = emailNotificationsEnabled; }
+    public boolean isPushNotificationsEnabled() { return pushNotificationsEnabled; }
+    public void setPushNotificationsEnabled(boolean pushNotificationsEnabled) { this.pushNotificationsEnabled = pushNotificationsEnabled; }
+    public boolean isAutoplayVideoEnabled() { return autoplayVideoEnabled; }
+    public void setAutoplayVideoEnabled(boolean autoplayVideoEnabled) { this.autoplayVideoEnabled = autoplayVideoEnabled; }
+    public boolean isContentVisibleToPublic() { return contentVisibleToPublic; }
+    public void setContentVisibleToPublic(boolean contentVisibleToPublic) { this.contentVisibleToPublic = contentVisibleToPublic; }
+    public boolean isSearchIndexingEnabled() { return searchIndexingEnabled; }
+    public void setSearchIndexingEnabled(boolean searchIndexingEnabled) { this.searchIndexingEnabled = searchIndexingEnabled; }
+    public boolean isTwoFactorEnabled() { return twoFactorEnabled; }
+    public void setTwoFactorEnabled(boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    public Instant getDeactivatedAt() { return deactivatedAt; }
+    public void setDeactivatedAt(Instant deactivatedAt) { this.deactivatedAt = deactivatedAt; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public UserRole getRole() { return role; }
@@ -68,3 +127,4 @@ public class User {
     public Profile getProfile() { return profile; }
     public void setProfile(Profile profile) { this.profile = profile; }
 }
+

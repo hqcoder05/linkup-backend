@@ -11,6 +11,9 @@ public record ProfileDto(
         String headline,
         String location,
         String websiteUrl,
+        long postsCount,
+        long followersCount,
+        long followingCount,
         Instant createdAt,
         Instant updatedAt
 ) {

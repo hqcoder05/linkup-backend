@@ -18,7 +18,10 @@ public final class ChatDtos {
 
     public record SendMessageRequest(
             @Size(max = 5000) String content,
-            @Size(max = 700) String attachmentUrl
+            @Size(max = 700) String attachmentUrl,
+            Long sharedPostId,
+            Long sharedStoryId,
+            Long disappearAfterSeconds
     ) {
     }
 
@@ -39,6 +42,10 @@ public final class ChatDtos {
             UserDto sender,
             String content,
             String attachmentUrl,
+            Long sharedPostId,
+            Long sharedStoryId,
+            boolean disappearing,
+            Instant expiresAt,
             Instant createdAt,
             boolean deleted,
             boolean read,

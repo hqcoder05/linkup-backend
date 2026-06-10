@@ -2,6 +2,7 @@ package com.linkup.user;
 
 import com.linkup.common.ApiResponse;
 import com.linkup.security.CurrentUser;
+import com.linkup.user.dto.SuggestionDto;
 import com.linkup.user.dto.UserDto;
 import java.util.List;
 import org.springframework.security.core.Authentication;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
+    private final SuggestionService suggestionService;
     private final CurrentUser currentUser;
 
-    public UserController(UserService userService, CurrentUser currentUser) {
+    public UserController(UserService userService, SuggestionService suggestionService, CurrentUser currentUser) {
         this.userService = userService;
+        this.suggestionService = suggestionService;
         this.currentUser = currentUser;
     }
 
@@ -35,5 +38,10 @@ public class UserController {
     @GetMapping("/search")
     ApiResponse<List<UserDto>> search(@RequestParam(defaultValue = "") String keyword, Authentication authentication) {
         return ApiResponse.ok(userService.search(keyword, currentUser.id(authentication)));
+    }
+
+    @GetMapping("/suggestions")
+    ApiResponse<List<SuggestionDto>> suggestions(@RequestParam(defaultValue = "10") int limit, Authentication authentication) {
+        return ApiResponse.ok(suggestionService.suggestions(currentUser.id(authentication), limit));
     }
 }

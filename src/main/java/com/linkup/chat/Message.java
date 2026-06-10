@@ -1,5 +1,7 @@
 package com.linkup.chat;
 
+import com.linkup.post.Post;
+import com.linkup.story.Story;
 import com.linkup.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +36,19 @@ public class Message {
     @Column(length = 700)
     private String attachmentUrl;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shared_post_id")
+    private Post sharedPost;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shared_story_id")
+    private Story sharedStory;
+
+    @Column(nullable = false)
+    private boolean disappearing;
+
+    private Instant expiresAt;
+
     @Column(nullable = false)
     private boolean deleted;
 
@@ -50,6 +65,14 @@ public class Message {
     public void setContent(String content) { this.content = content; }
     public String getAttachmentUrl() { return attachmentUrl; }
     public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+    public Post getSharedPost() { return sharedPost; }
+    public void setSharedPost(Post sharedPost) { this.sharedPost = sharedPost; }
+    public Story getSharedStory() { return sharedStory; }
+    public void setSharedStory(Story sharedStory) { this.sharedStory = sharedStory; }
+    public boolean isDisappearing() { return disappearing; }
+    public void setDisappearing(boolean disappearing) { this.disappearing = disappearing; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
     public boolean isDeleted() { return deleted; }
     public void setDeleted(boolean deleted) { this.deleted = deleted; }
     public Instant getCreatedAt() { return createdAt; }

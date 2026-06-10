@@ -8,6 +8,8 @@ import com.linkup.common.BadRequestException;
 import com.linkup.common.ForbiddenException;
 import com.linkup.common.ResourceNotFoundException;
 import com.linkup.notification.NotificationService;
+import com.linkup.post.PostService;
+import com.linkup.story.StoryRepository;
 import com.linkup.user.User;
 import com.linkup.user.UserMapper;
 import com.linkup.user.UserService;
@@ -28,14 +30,26 @@ public class ChatService {
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
+    private final PostService postService;
+    private final StoryRepository storyRepository;
 
-    public ChatService(ConversationRepository conversationRepository, ConversationMemberRepository memberRepository, MessageRepository messageRepository, UserService userService, SimpMessagingTemplate messagingTemplate, NotificationService notificationService) {
+    public ChatService(
+            ConversationRepository conversationRepository,
+            ConversationMemberRepository memberRepository,
+            MessageRepository messageRepository,
+            UserService userService,
+            SimpMessagingTemplate messagingTemplate,
+            NotificationService notificationService,
+            PostService postService,
+            StoryRepository storyRepository) {
         this.conversationRepository = conversationRepository;
         this.memberRepository = memberRepository;
         this.messageRepository = messageRepository;
         this.userService = userService;
         this.messagingTemplate = messagingTemplate;
         this.notificationService = notificationService;
+        this.postService = postService;
+        this.storyRepository = storyRepository;
     }
 
     @Transactional
@@ -44,6 +58,16 @@ public class ChatService {
         memberIds.add(currentUserId);
         if (memberIds.size() < 2) {
             throw new BadRequestException("At least two members are required");
+        }
+        if (memberIds.size() == 2) {
+            Long otherUserId = memberIds.stream()
+                    .filter(id -> !id.equals(currentUserId))
+                    .findFirst()
+                    .orElseThrow(() -> new BadRequestException("At least two members are required"));
+            var existing = conversationRepository.findDirectConversation(currentUserId, otherUserId);
+            if (existing.isPresent()) {
+                return toConversationDto(existing.get(), currentUserId);
+            }
         }
         Conversation conversation = new Conversation();
         conversation.setName(request.name());
@@ -78,8 +102,11 @@ public class ChatService {
     @Transactional
     public MessageDto sendMessage(Long conversationId, Long userId, SendMessageRequest request) {
         ensureMember(conversationId, userId);
-        if ((request.content() == null || request.content().isBlank()) && (request.attachmentUrl() == null || request.attachmentUrl().isBlank())) {
-            throw new BadRequestException("Message must have content or attachment");
+        if ((request.content() == null || request.content().isBlank())
+                && (request.attachmentUrl() == null || request.attachmentUrl().isBlank())
+                && request.sharedPostId() == null
+                && request.sharedStoryId() == null) {
+            throw new BadRequestException("Message must have content, attachment, shared post, or shared story");
         }
         Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
         User sender = userService.get(userId);
@@ -88,6 +115,18 @@ public class ChatService {
         message.setSender(sender);
         message.setContent(request.content());
         message.setAttachmentUrl(request.attachmentUrl());
+        if (request.sharedPostId() != null) {
+            var post = postService.get(request.sharedPostId());
+            postService.ensureVisible(post, userId);
+            message.setSharedPost(post);
+        }
+        if (request.sharedStoryId() != null) {
+            message.setSharedStory(storyRepository.findById(request.sharedStoryId()).orElseThrow(() -> new BadRequestException("Story not found")));
+        }
+        if (request.disappearAfterSeconds() != null && request.disappearAfterSeconds() > 0) {
+            message.setDisappearing(true);
+            message.setExpiresAt(Instant.now().plusSeconds(request.disappearAfterSeconds()));
+        }
         Message saved = messageRepository.save(message);
         MessageDto dto = toMessageDto(saved, userId, null);
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId, dto);
@@ -132,6 +171,10 @@ public class ChatService {
                 UserMapper.toDto(message.getSender()),
                 message.getContent(),
                 message.getAttachmentUrl(),
+                message.getSharedPost() == null ? null : message.getSharedPost().getId(),
+                message.getSharedStory() == null ? null : message.getSharedStory().getId(),
+                message.isDisappearing(),
+                message.getExpiresAt(),
                 message.getCreatedAt(),
                 message.isDeleted(),
                 read,

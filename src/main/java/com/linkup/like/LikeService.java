@@ -2,6 +2,7 @@ package com.linkup.like;
 
 import com.linkup.notification.NotificationService;
 import com.linkup.post.Post;
+import com.linkup.post.PostRepository;
 import com.linkup.post.PostService;
 import com.linkup.user.User;
 import com.linkup.user.UserService;
@@ -12,12 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class LikeService {
     private final LikeRepository likeRepository;
     private final PostService postService;
+    private final PostRepository postRepository;
     private final UserService userService;
     private final NotificationService notificationService;
 
-    public LikeService(LikeRepository likeRepository, PostService postService, UserService userService, NotificationService notificationService) {
+    public LikeService(LikeRepository likeRepository, PostService postService, PostRepository postRepository, UserService userService, NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.postService = postService;
+        this.postRepository = postRepository;
         this.userService = userService;
         this.notificationService = notificationService;
     }
@@ -30,17 +33,25 @@ public class LikeService {
             Like like = new Like();
             like.setPost(post);
             like.setUser(user);
-            likeRepository.save(like);
+            likeRepository.saveAndFlush(like);
+            postRepository.incrementLikesCount(postId);
             if (!post.getUser().getId().equals(userId)) {
-                notificationService.create(post.getUser().getId(), "post_like", "New like", "Someone liked your post.", "/posts/" + postId);
+                notificationService.create(post.getUser().getId(), "post_like", "New like", "Someone liked your post.", "/posts/" + postId, String.valueOf(postId), userId);
             }
         }
-        return likeRepository.countByPostId(postId);
+        return postRepository.findLikesCountById(postId);
     }
 
     @Transactional
     public long unlikePost(Long postId, Long userId) {
-        likeRepository.deleteByPostIdAndUserId(postId, userId);
-        return likeRepository.countByPostId(postId);
+        likeRepository.findByPostIdAndUserId(postId, userId).ifPresent(like -> {
+            Long ownerId = like.getPost().getUser().getId();
+            likeRepository.delete(like);
+            postRepository.decrementLikesCount(postId);
+            if (!ownerId.equals(userId)) {
+                notificationService.decrementInteraction(ownerId, "post_like", String.valueOf(postId), userId);
+            }
+        });
+        return postRepository.findLikesCountById(postId);
     }
 }

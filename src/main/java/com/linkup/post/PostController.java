@@ -20,10 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PostController {
     private final PostService postService;
+    private final FeedService feedService;
     private final CurrentUser currentUser;
 
-    public PostController(PostService postService, CurrentUser currentUser) {
+    public PostController(PostService postService, FeedService feedService, CurrentUser currentUser) {
         this.postService = postService;
+        this.feedService = feedService;
         this.currentUser = currentUser;
     }
 
@@ -34,12 +36,44 @@ public class PostController {
 
     @GetMapping("/api/posts/feed")
     ApiResponse<List<PostDto>> feed(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
-        return ApiResponse.ok(postService.feed(currentUser.id(authentication), page, size));
+        return ApiResponse.ok(feedService.homeFeed(currentUser.id(authentication), page, size));
+    }
+
+    @GetMapping("/api/posts/explore")
+    ApiResponse<List<PostDto>> explore(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
+        return ApiResponse.ok(feedService.explore(currentUser.id(authentication), page, size));
     }
 
     @GetMapping("/api/posts/{id}")
     ApiResponse<PostDto> get(@PathVariable Long id, Authentication authentication) {
-        return ApiResponse.ok(postService.getDto(id, currentUser.id(authentication)));
+        return ApiResponse.ok(postService.getDto(id, currentUser.idOrNull(authentication)));
+    }
+
+    @GetMapping("/api/posts/search")
+    ApiResponse<List<PostDto>> search(@RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
+        return ApiResponse.ok(postService.search(keyword, currentUser.idOrNull(authentication), page, size));
+    }
+
+    @GetMapping("/api/hashtags/{name}/posts")
+    ApiResponse<List<PostDto>> byHashtag(@PathVariable String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
+        return ApiResponse.ok(postService.byHashtag(name, currentUser.idOrNull(authentication), page, size));
+    }
+
+    @PostMapping("/api/posts/{id}/save")
+    ApiResponse<Void> save(@PathVariable Long id, Authentication authentication) {
+        postService.savePost(id, currentUser.id(authentication));
+        return ApiResponse.message("Post saved");
+    }
+
+    @DeleteMapping("/api/posts/{id}/save")
+    ApiResponse<Void> unsave(@PathVariable Long id, Authentication authentication) {
+        postService.unsavePost(id, currentUser.id(authentication));
+        return ApiResponse.message("Post unsaved");
+    }
+
+    @GetMapping("/api/posts/saved")
+    ApiResponse<List<PostDto>> saved(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
+        return ApiResponse.ok(postService.savedPosts(currentUser.id(authentication), page, size));
     }
 
     @PutMapping("/api/posts/{id}")
@@ -55,6 +89,6 @@ public class PostController {
 
     @GetMapping("/api/users/{userId}/posts")
     ApiResponse<List<PostDto>> byUser(@PathVariable Long userId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size, Authentication authentication) {
-        return ApiResponse.ok(postService.byUser(userId, currentUser.id(authentication), page, size));
+        return ApiResponse.ok(postService.byUser(userId, currentUser.idOrNull(authentication), page, size));
     }
 }

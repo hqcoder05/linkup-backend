@@ -2,6 +2,7 @@ package com.linkup.auth;
 
 import com.linkup.auth.dto.AuthResponse;
 import com.linkup.auth.dto.LoginRequest;
+import com.linkup.auth.dto.RefreshTokenRequest;
 import com.linkup.auth.dto.RegisterRequest;
 import com.linkup.common.ApiResponse;
 import com.linkup.security.CurrentUser;
@@ -32,6 +33,11 @@ public class AuthController {
     @PostMapping("/login")
     ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ApiResponse.ok(authService.refresh(request));
     }
 
     @GetMapping("/me")

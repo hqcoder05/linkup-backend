@@ -8,6 +8,9 @@ public record NotificationDto(
         String title,
         String content,
         String url,
+        String targetId,
+        Long lastInteractorId,
+        int interactionCount,
         boolean read,
         Instant createdAt
 ) {

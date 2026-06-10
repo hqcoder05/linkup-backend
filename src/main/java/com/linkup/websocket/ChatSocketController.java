@@ -19,7 +19,12 @@ public class ChatSocketController {
 
     @MessageMapping("/chat.send")
     public MessageDto send(@Valid @Payload SocketMessageRequest request) {
-        return chatService.sendMessage(request.conversationId(), request.senderId(), new SendMessageRequest(request.content(), request.attachmentUrl()));
+        return chatService.sendMessage(request.conversationId(), request.senderId(), new SendMessageRequest(
+                request.content(),
+                request.attachmentUrl(),
+                request.sharedPostId(),
+                request.sharedStoryId(),
+                request.disappearAfterSeconds()));
     }
 
     @MessageMapping("/conversations/{conversationId}/read")
@@ -27,7 +32,7 @@ public class ChatSocketController {
         chatService.markRead(conversationId, request.userId());
     }
 
-    public record SocketMessageRequest(Long conversationId, Long senderId, String content, String attachmentUrl) {
+    public record SocketMessageRequest(Long conversationId, Long senderId, String content, String attachmentUrl, Long sharedPostId, Long sharedStoryId, Long disappearAfterSeconds) {
     }
 
     public record SocketReadRequest(Long userId) {

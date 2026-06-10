@@ -7,7 +7,12 @@ public record UserDto(
         String email,
         String fullName,
         String avatarUrl,
+        String coverUrl,
+        boolean privateAccount,
+        boolean following,
+        boolean followedByCurrentUser,
         String role,
         Instant createdAt
 ) {
 }
+

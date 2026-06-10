@@ -6,6 +6,7 @@ import com.linkup.common.ForbiddenException;
 import com.linkup.common.ResourceNotFoundException;
 import com.linkup.notification.NotificationService;
 import com.linkup.post.Post;
+import com.linkup.post.PostRepository;
 import com.linkup.post.PostService;
 import com.linkup.user.User;
 import com.linkup.user.UserMapper;
@@ -18,12 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostService postService;
+    private final PostRepository postRepository;
     private final UserService userService;
     private final NotificationService notificationService;
 
-    public CommentService(CommentRepository commentRepository, PostService postService, UserService userService, NotificationService notificationService) {
+    public CommentService(CommentRepository commentRepository, PostService postService, PostRepository postRepository, UserService userService, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.postService = postService;
+        this.postRepository = postRepository;
         this.userService = userService;
         this.notificationService = notificationService;
     }
@@ -36,9 +39,10 @@ public class CommentService {
         comment.setPost(post);
         comment.setUser(user);
         comment.setContent(request.content());
-        Comment saved = commentRepository.save(comment);
+        Comment saved = commentRepository.saveAndFlush(comment);
+        postRepository.incrementCommentsCount(postId);
         if (!post.getUser().getId().equals(userId)) {
-            notificationService.create(post.getUser().getId(), "post_comment", "New comment", request.content(), "/posts/" + postId);
+            notificationService.create(post.getUser().getId(), "post_comment", "New comment", request.content(), "/posts/" + postId, String.valueOf(postId), userId);
         }
         return toDto(saved);
     }
@@ -59,7 +63,9 @@ public class CommentService {
         if (!comment.getUser().getId().equals(userId)) {
             throw new ForbiddenException("Only the comment owner can delete this comment");
         }
+        Long postId = comment.getPost().getId();
         commentRepository.delete(comment);
+        postRepository.decrementCommentsCount(postId);
     }
 
     public List<CommentDto> forPost(Long postId) {

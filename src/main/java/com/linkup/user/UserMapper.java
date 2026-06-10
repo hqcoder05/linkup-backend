@@ -12,7 +12,26 @@ public final class UserMapper {
                 user.getEmail(),
                 user.getFullName(),
                 user.getAvatarUrl(),
+                user.getCoverUrl(),
+                user.isPrivateAccount(),
+                false,
+                false,
+                user.getRole().name(),
+                user.getCreatedAt());
+    }
+
+    public static UserDto toDto(User user, boolean following) {
+        return new UserDto(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                user.getAvatarUrl(),
+                user.getCoverUrl(),
+                user.isPrivateAccount(),
+                following,
+                following,
                 user.getRole().name(),
                 user.getCreatedAt());
     }
 }
+

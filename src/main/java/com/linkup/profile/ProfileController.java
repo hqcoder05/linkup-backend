@@ -8,6 +8,7 @@ import com.linkup.user.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,11 @@ public class ProfileController {
     @GetMapping("/me")
     ApiResponse<ProfileDto> me(Authentication authentication) {
         return ApiResponse.ok(userService.profile(currentUser.id(authentication)));
+    }
+
+    @GetMapping("/{userId}")
+    ApiResponse<ProfileDto> byUser(@PathVariable Long userId) {
+        return ApiResponse.ok(userService.profile(userId));
     }
 
     @PutMapping("/me")

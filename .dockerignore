@@ -1,0 +1,10 @@
+.git
+.agents
+.codex
+target
+dist
+node_modules
+.env
+.env.*
+*.log
+README.md

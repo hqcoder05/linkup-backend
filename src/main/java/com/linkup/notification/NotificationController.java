@@ -38,4 +38,10 @@ public class NotificationController {
         notificationService.markRead(id, currentUser.id(authentication));
         return ApiResponse.message("Marked as read");
     }
+
+    @PostMapping("/read-all")
+    ApiResponse<Void> readAll(Authentication authentication) {
+        notificationService.markAllRead(currentUser.id(authentication));
+        return ApiResponse.message("All notifications marked as read");
+    }
 }

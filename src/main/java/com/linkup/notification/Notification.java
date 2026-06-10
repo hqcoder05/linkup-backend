@@ -36,6 +36,16 @@ public class Notification {
     @Column(length = 700)
     private String url;
 
+    @Column(length = 120)
+    private String targetId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_interactor_id")
+    private User lastInteractor;
+
+    @Column(nullable = false)
+    private int interactionCount = 1;
+
     @Column(nullable = false)
     private boolean read;
 
@@ -54,6 +64,12 @@ public class Notification {
     public void setContent(String content) { this.content = content; }
     public String getUrl() { return url; }
     public void setUrl(String url) { this.url = url; }
+    public String getTargetId() { return targetId; }
+    public void setTargetId(String targetId) { this.targetId = targetId; }
+    public User getLastInteractor() { return lastInteractor; }
+    public void setLastInteractor(User lastInteractor) { this.lastInteractor = lastInteractor; }
+    public int getInteractionCount() { return interactionCount; }
+    public void setInteractionCount(int interactionCount) { this.interactionCount = interactionCount; }
     public boolean isRead() { return read; }
     public void setRead(boolean read) { this.read = read; }
     public Instant getCreatedAt() { return createdAt; }
